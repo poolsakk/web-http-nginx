@@ -1,0 +1,48 @@
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80" # เปลี่ยนเป็นพอร์ตที่เปิดเผยภายนอก
+    networks:
+      - internal_network
+    environment:
+      - VIRTUAL_HOST=scaleton.local
+    depends_on:
+      - client-app
+      
+  client-app:
+    container_name: client-app
+    build:
+      context: ./client-app
+      dockerfile: Dockerfile.local
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./client-app:/usr/src/app # แชร์ไฟล์จาก host ไป container
+      - /usr/src/app/node_modules # ป้องกันไม่ให้ node_modules ที่อยู่ใน container ถูกแชร์หรือถูกเขียนทับโดยโฟลเดอร์ node_modules จาก host
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    external: true # docker network create internale_network
+  # client-app:
+  #   container_name: client-app
+  #   build:
+  #     context: ./client-app
+  #     dockerfile: Dockerfile.local
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./client-app:/usr/src/app # แชร์ไฟล์จาก host ไป container
+  #     - /usr/src/app/node_modules # ป้องกันไม่ให้ node_modules ที่อยู่ใน container ถูกแชร์หรือถูกเขียนทับโดยโฟลเดอร์ node_modules จาก host
+  #   command: npm run dev
+  #   networks:
+  #     - internal_network
+      # - /usr/src/app/node_modules # ป้องกันไม่ให้ node_modules ที่อยู่ใน container ถูกแชร์หรือถูกเขียนทับโดยโฟลเดอร์ node_modules จาก host
+# networks:
+#   internal_network:
+#     driver: bridge
